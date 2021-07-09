@@ -37,8 +37,11 @@ public class SimpleMachineDiscovery implements MachineDiscovery {
     @Override
     public long addMachine(MachineInfo machineInfo) {
         AssertUtil.notNull(machineInfo, "machineInfo cannot be null");
+
+        //构建 AppInfo 信息，进行缓存
         AppInfo appInfo = apps.computeIfAbsent(machineInfo.getApp(), o -> new AppInfo(machineInfo.getApp(), machineInfo.getAppType()));
         appInfo.addMachine(machineInfo);
+
         return 1;
     }
 

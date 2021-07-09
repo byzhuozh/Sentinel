@@ -39,9 +39,18 @@ public class MachineRegistryController {
     @Autowired
     private AppManagement appManagement;
 
+    /**
+     * 客户端上报注册
+     */
     @ResponseBody
     @RequestMapping("/machine")
-    public Result<?> receiveHeartBeat(String app, @RequestParam(value = "app_type", required = false, defaultValue = "0") Integer appType, Long version, String v, String hostname, String ip, Integer port) {
+    public Result<?> receiveHeartBeat(String app,
+                                      @RequestParam(value = "app_type", required = false, defaultValue = "0") Integer appType,
+                                      Long version,
+                                      String v,
+                                      String hostname,
+                                      String ip,
+                                      Integer port) {
         if (app == null) {
             app = MachineDiscovery.UNKNOWN_APP_NAME;
         }
@@ -55,9 +64,12 @@ public class MachineRegistryController {
             logger.info("Receive heartbeat from " + ip + " but port not set yet");
             return Result.ofFail(-1, "your port not set yet");
         }
+
+        //sentinel 版本
         String sentinelVersion = StringUtil.isEmpty(v) ? "unknown" : v;
         version = version == null ? System.currentTimeMillis() : version;
         try {
+            //根据客户端上报的信息，构建 MachineInfo
             MachineInfo machineInfo = new MachineInfo();
             machineInfo.setApp(app);
             machineInfo.setAppType(appType);

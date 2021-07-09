@@ -15,14 +15,13 @@
  */
 package com.alibaba.csp.sentinel.node;
 
+import com.alibaba.csp.sentinel.ResourceTypeConstants;
+import com.alibaba.csp.sentinel.context.ContextUtil;
+import com.alibaba.csp.sentinel.util.AssertUtil;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
-
-import com.alibaba.csp.sentinel.ResourceTypeConstants;
-import com.alibaba.csp.sentinel.context.ContextUtil;
-import com.alibaba.csp.sentinel.slots.block.BlockException;
-import com.alibaba.csp.sentinel.util.AssertUtil;
 
 /**
  * <p>
@@ -41,6 +40,9 @@ import com.alibaba.csp.sentinel.util.AssertUtil;
  *
  * @author qinan.qn
  * @author jialiang.linjl
+ * <p>
+ * <p>
+ * 该节点中保存了资源的总体的运行时统计信息，包括rt，线程数，qps等等，相同的资源会全局共享同一个ClusterNode，不管他属于哪个上下文
  */
 public class ClusterNode extends StatisticNode {
 

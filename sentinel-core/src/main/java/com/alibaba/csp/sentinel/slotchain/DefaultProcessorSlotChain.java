@@ -23,11 +23,13 @@ import com.alibaba.csp.sentinel.context.Context;
  */
 public class DefaultProcessorSlotChain extends ProcessorSlotChain {
 
+    //链表的头结点
     AbstractLinkedProcessorSlot<?> first = new AbstractLinkedProcessorSlot<Object>() {
 
         @Override
         public void entry(Context context, ResourceWrapper resourceWrapper, Object t, int count, boolean prioritized, Object... args)
             throws Throwable {
+            //触发 next 节点的的 transformEntry 方法
             super.fireEntry(context, resourceWrapper, t, count, prioritized, args);
         }
 
@@ -35,12 +37,15 @@ public class DefaultProcessorSlotChain extends ProcessorSlotChain {
         public void exit(Context context, ResourceWrapper resourceWrapper, int count, Object... args) {
             super.fireExit(context, resourceWrapper, count, args);
         }
-
     };
+
+
+    //链表的尾节点
     AbstractLinkedProcessorSlot<?> end = first;
 
     @Override
     public void addFirst(AbstractLinkedProcessorSlot<?> protocolProcessor) {
+        //新的处理器添加到 first 之后
         protocolProcessor.setNext(first.getNext());
         first.setNext(protocolProcessor);
         if (end == first) {

@@ -41,6 +41,7 @@ public final class SlotChainProvider {
         }
 
         // Resolve the slot chain builder SPI.
+        // spi 加载 SlotChainBuilder 实现类: DefaultSlotChainBuilder
         slotChainBuilder = SpiLoader.of(SlotChainBuilder.class).loadFirstInstanceOrDefault();
 
         if (slotChainBuilder == null) {
@@ -51,6 +52,8 @@ public final class SlotChainProvider {
             RecordLog.info("[SlotChainProvider] Global slot chain builder resolved: {}",
                 slotChainBuilder.getClass().getCanonicalName());
         }
+
+        // 返回的ProcessorSlotChain -->  DefaultProcessorSlotChain
         return slotChainBuilder.build();
     }
 

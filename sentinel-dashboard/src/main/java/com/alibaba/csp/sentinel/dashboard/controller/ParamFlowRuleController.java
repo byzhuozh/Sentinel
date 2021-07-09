@@ -96,6 +96,7 @@ public class ParamFlowRuleController {
         if (!checkIfSupported(app, ip, port)) {
             return unsupportedVersion();
         }
+
         try {
             return sentinelApiClient.fetchParamFlowRulesOfMachine(app, ip, port)
                 .thenApply(repository::saveAll)

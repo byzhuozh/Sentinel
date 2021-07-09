@@ -64,9 +64,11 @@ public class FlowQpsDemo {
         rule1.setResource(KEY);
         // set limit qps to 20
         rule1.setCount(20);
+        // 设置限流类型：根据qps
         rule1.setGrade(RuleConstant.FLOW_GRADE_QPS);
         rule1.setLimitApp("default");
         rules.add(rule1);
+        // 加载限流的规则
         FlowRuleManager.loadRules(rules);
     }
 
@@ -94,11 +96,13 @@ public class FlowQpsDemo {
             long oldTotal = 0;
             long oldPass = 0;
             long oldBlock = 0;
+
             while (!stop) {
                 try {
                     TimeUnit.SECONDS.sleep(1);
                 } catch (InterruptedException e) {
                 }
+
                 long globalTotal = total.get();
                 long oneSecondTotal = globalTotal - oldTotal;
                 oldTotal = globalTotal;

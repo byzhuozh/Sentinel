@@ -25,6 +25,7 @@ public abstract class AbstractRule implements Rule {
 
     /**
      * Resource name.
+     * 规则的资源名
      */
     private String resource;
 
@@ -36,6 +37,8 @@ public abstract class AbstractRule implements Rule {
      * <p>
      * For authority rules, multiple origin name can be separated with comma (',').
      * </p>
+     * <p>
+     * 被限制的应用，授权时候为逗号分隔的应用集合，限流时为单个应用
      */
     private String limitApp;
 
@@ -67,7 +70,7 @@ public abstract class AbstractRule implements Rule {
             return false;
         }
 
-        AbstractRule that = (AbstractRule)o;
+        AbstractRule that = (AbstractRule) o;
 
         if (resource != null ? !resource.equals(that.resource) : that.resource != null) {
             return false;
@@ -91,7 +94,7 @@ public abstract class AbstractRule implements Rule {
     }
 
     public <T extends AbstractRule> T as(Class<T> clazz) {
-        return (T)this;
+        return (T) this;
     }
 
     @Override

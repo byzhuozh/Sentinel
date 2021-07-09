@@ -28,6 +28,8 @@ import com.alibaba.csp.sentinel.spi.Spi;
  *
  * @author jialiang.linjl
  * @author leyou
+ *
+ * 通过系统的状态，例如 load1 等，来控制总的入口流量
  */
 @Spi(order = Constants.ORDER_SYSTEM_SLOT)
 public class SystemSlot extends AbstractLinkedProcessorSlot<DefaultNode> {

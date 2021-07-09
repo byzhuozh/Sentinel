@@ -45,6 +45,8 @@ import com.alibaba.csp.sentinel.spi.Spi;
  * </p>
  *
  * @author jialiang.linjl
+ *
+ * 用于存储资源的统计信息以及调用者信息，例如该资源的 RT, QPS, thread count 等等，这些信息将用作为多维度限流，降级的依据
  */
 @Spi(isSingleton = false, order = Constants.ORDER_CLUSTER_BUILDER_SLOT)
 public class ClusterBuilderSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
@@ -82,6 +84,8 @@ public class ClusterBuilderSlot extends AbstractLinkedProcessorSlot<DefaultNode>
                 if (clusterNode == null) {
                     // Create the cluster node.
                     clusterNode = new ClusterNode(resourceWrapper.getName(), resourceWrapper.getResourceType());
+
+                    // 将 clusterNode 保存到全局的 map 中去
                     HashMap<ResourceWrapper, ClusterNode> newMap = new HashMap<>(Math.max(clusterNodeMap.size(), 16));
                     newMap.putAll(clusterNodeMap);
                     newMap.put(node.getId(), clusterNode);
@@ -90,6 +94,8 @@ public class ClusterBuilderSlot extends AbstractLinkedProcessorSlot<DefaultNode>
                 }
             }
         }
+
+        // 将clusterNode塞到DefaultNode中去
         node.setClusterNode(clusterNode);
 
         /*

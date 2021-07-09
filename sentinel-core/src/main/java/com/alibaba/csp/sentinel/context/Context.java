@@ -63,11 +63,15 @@ public class Context {
 
     /**
      * The entrance node of current invocation tree.
+     * <p>
+     * 当前调用链的根节点
      */
     private DefaultNode entranceNode;
 
     /**
      * Current processing entry.
+     * <p>
+     * 当前的入口
      */
     private Entry curEntry;
 
@@ -82,7 +86,7 @@ public class Context {
      * Create a new async context.
      *
      * @param entranceNode entrance node of the context
-     * @param name context name
+     * @param name         context name
      * @return the new created context
      * @since 0.2.0
      */
@@ -177,6 +181,11 @@ public class Context {
      * @return the parent node of the current.
      */
     public Node getLastNode() {
+        // 如果 curEntry 不存在时，返回 entranceNode
+        // 否则返回 curEntry 的 lastNode，
+        // 需要注意的是 curEntry 的 lastNode 是获取的 parent 的 curNode，
+        // 如果每次进入的资源不同，就会每次都创建一个 CtEntry，则 parent 为 null，
+        // 所以 curEntry.getLastNode() 也为 null
         if (curEntry != null && curEntry.getLastNode() != null) {
             return curEntry.getLastNode();
         } else {
@@ -191,11 +200,11 @@ public class Context {
     @Override
     public String toString() {
         return "Context{" +
-            "name='" + name + '\'' +
-            ", entranceNode=" + entranceNode +
-            ", curEntry=" + curEntry +
-            ", origin='" + origin + '\'' +
-            ", async=" + async +
-            '}';
+                "name='" + name + '\'' +
+                ", entranceNode=" + entranceNode +
+                ", curEntry=" + curEntry +
+                ", origin='" + origin + '\'' +
+                ", async=" + async +
+                '}';
     }
 }

@@ -47,7 +47,7 @@ import java.util.Map;
  * }
  * ContextUtil.exit();
  * </pre>
- *
+ * <p>
  * Above code will generate the following invocation structure in memory:
  *
  * <pre>
@@ -94,7 +94,7 @@ import java.util.Map;
  *    }
  *    ContextUtil.exit();
  * </pre>
- *
+ * <p>
  * Above code will generate the following invocation structure in memory:
  *
  * <pre>
@@ -123,6 +123,8 @@ import java.util.Map;
  * @author jialiang.linjl
  * @see EntranceNode
  * @see ContextUtil
+ * <p>
+ * 负责收集资源的路径，并将这些资源的调用路径，以树状结构存储起来，用于根据调用路径来限流降级
  */
 @Spi(isSingleton = false, order = Constants.ORDER_NODE_SELECTOR_SLOT)
 public class NodeSelectorSlot extends AbstractLinkedProcessorSlot<Object> {
@@ -134,7 +136,7 @@ public class NodeSelectorSlot extends AbstractLinkedProcessorSlot<Object> {
 
     @Override
     public void entry(Context context, ResourceWrapper resourceWrapper, Object obj, int count, boolean prioritized, Object... args)
-        throws Throwable {
+            throws Throwable {
         /*
          * It's interesting that we use context name rather resource name as the map key.
          *
@@ -153,24 +155,35 @@ public class NodeSelectorSlot extends AbstractLinkedProcessorSlot<Object> {
          * The answer is all {@link DefaultNode}s with same resource name share one
          * {@link ClusterNode}. See {@link ClusterBuilderSlot} for detail.
          */
+        // 根据「上下文」的名称获取DefaultNode
+        // 多线程环境下，每个线程都会创建一个context，
+        // 只要资源名相同，则context的名称也相同，那么获取到的节点就相同
         DefaultNode node = map.get(context.getName());
         if (node == null) {
             synchronized (this) {
                 node = map.get(context.getName());
                 if (node == null) {
+                    // 如果当前「上下文」中没有该节点，则创建一个DefaultNode节点
                     node = new DefaultNode(resourceWrapper, null);
                     HashMap<String, DefaultNode> cacheMap = new HashMap<String, DefaultNode>(map.size());
                     cacheMap.putAll(map);
                     cacheMap.put(context.getName(), node);
                     map = cacheMap;
                     // Build invocation tree
+                    // 将当前node作为「上下文」的最后一个节点的子节点添加进去
+                    // 如果context的 curEntry.parent.curNode 为 null，则添加到 entranceNode 中去
+                    // 否则添加到 context的curEntry.parent.curNode 中去
                     ((DefaultNode) context.getLastNode()).addChild(node);
                 }
-
             }
         }
 
+        // 将该节点设置为「上下文」中的当前节点
+        // 实际是将当前节点赋值给 context 中 curEntry 的 curNode
+        // 在 Context 的 getLastNode 中会用到在此处设置的 curNode
         context.setCurNode(node);
+
+        // 触发下一个节点的entry方法
         fireEntry(context, resourceWrapper, node, count, prioritized, args);
     }
 

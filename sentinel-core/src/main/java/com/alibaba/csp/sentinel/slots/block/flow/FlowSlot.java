@@ -137,6 +137,8 @@ import java.util.Map;
  *
  * @author jialiang.linjl
  * @author Eric Zhao
+ *
+ * 用于根据预设的限流规则，以及前面 slot 统计的状态，来进行限流
  */
 @Spi(order = Constants.ORDER_FLOW_SLOT)
 public class FlowSlot extends AbstractLinkedProcessorSlot<DefaultNode> {

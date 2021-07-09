@@ -48,20 +48,26 @@ public class FlowRule extends AbstractRule {
 
     /**
      * The threshold type of flow control (0: thread count, 1: QPS).
+     * <p>
+     * 限流阈值类型: qps 或线程数
      */
     private int grade = RuleConstant.FLOW_GRADE_QPS;
 
     /**
      * Flow control threshold count.
+     * <p>
+     * 限流的阈值
      */
     private double count;
 
     /**
      * Flow control strategy based on invocation chain.
-     *
+     * <p>
      * {@link RuleConstant#STRATEGY_DIRECT} for direct flow control (by origin);
      * {@link RuleConstant#STRATEGY_RELATE} for relevant flow control (with relevant resource);
      * {@link RuleConstant#STRATEGY_CHAIN} for chain flow control (by entrance resource).
+     * <p>
+     * 基于调用关系的流量控制
      */
     private int strategy = RuleConstant.STRATEGY_DIRECT;
 
@@ -73,6 +79,8 @@ public class FlowRule extends AbstractRule {
     /**
      * Rate limiter control behavior.
      * 0. default(reject directly), 1. warm up, 2. rate limiter, 3. warm up + rate limiter
+     * <p>
+     * 流控策略
      */
     private int controlBehavior = RuleConstant.CONTROL_BEHAVIOR_DEFAULT;
 
@@ -186,20 +194,42 @@ public class FlowRule extends AbstractRule {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) { return true; }
-        if (o == null || getClass() != o.getClass()) { return false; }
-        if (!super.equals(o)) { return false; }
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
 
-        FlowRule rule = (FlowRule)o;
+        FlowRule rule = (FlowRule) o;
 
-        if (grade != rule.grade) { return false; }
-        if (Double.compare(rule.count, count) != 0) { return false; }
-        if (strategy != rule.strategy) { return false; }
-        if (controlBehavior != rule.controlBehavior) { return false; }
-        if (warmUpPeriodSec != rule.warmUpPeriodSec) { return false; }
-        if (maxQueueingTimeMs != rule.maxQueueingTimeMs) { return false; }
-        if (clusterMode != rule.clusterMode) { return false; }
-        if (refResource != null ? !refResource.equals(rule.refResource) : rule.refResource != null) { return false; }
+        if (grade != rule.grade) {
+            return false;
+        }
+        if (Double.compare(rule.count, count) != 0) {
+            return false;
+        }
+        if (strategy != rule.strategy) {
+            return false;
+        }
+        if (controlBehavior != rule.controlBehavior) {
+            return false;
+        }
+        if (warmUpPeriodSec != rule.warmUpPeriodSec) {
+            return false;
+        }
+        if (maxQueueingTimeMs != rule.maxQueueingTimeMs) {
+            return false;
+        }
+        if (clusterMode != rule.clusterMode) {
+            return false;
+        }
+        if (refResource != null ? !refResource.equals(rule.refResource) : rule.refResource != null) {
+            return false;
+        }
         return clusterConfig != null ? clusterConfig.equals(rule.clusterConfig) : rule.clusterConfig == null;
     }
 
@@ -209,7 +239,7 @@ public class FlowRule extends AbstractRule {
         long temp;
         result = 31 * result + grade;
         temp = Double.doubleToLongBits(count);
-        result = 31 * result + (int)(temp ^ (temp >>> 32));
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + strategy;
         result = 31 * result + (refResource != null ? refResource.hashCode() : 0);
         result = 31 * result + controlBehavior;
@@ -223,18 +253,18 @@ public class FlowRule extends AbstractRule {
     @Override
     public String toString() {
         return "FlowRule{" +
-            "resource=" + getResource() +
-            ", limitApp=" + getLimitApp() +
-            ", grade=" + grade +
-            ", count=" + count +
-            ", strategy=" + strategy +
-            ", refResource=" + refResource +
-            ", controlBehavior=" + controlBehavior +
-            ", warmUpPeriodSec=" + warmUpPeriodSec +
-            ", maxQueueingTimeMs=" + maxQueueingTimeMs +
-            ", clusterMode=" + clusterMode +
-            ", clusterConfig=" + clusterConfig +
-            ", controller=" + controller +
-            '}';
+                "resource=" + getResource() +
+                ", limitApp=" + getLimitApp() +
+                ", grade=" + grade +
+                ", count=" + count +
+                ", strategy=" + strategy +
+                ", refResource=" + refResource +
+                ", controlBehavior=" + controlBehavior +
+                ", warmUpPeriodSec=" + warmUpPeriodSec +
+                ", maxQueueingTimeMs=" + maxQueueingTimeMs +
+                ", clusterMode=" + clusterMode +
+                ", clusterConfig=" + clusterConfig +
+                ", controller=" + controller +
+                '}';
     }
 }

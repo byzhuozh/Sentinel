@@ -15,10 +15,6 @@
  */
 package com.alibaba.csp.sentinel.context;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
-
 import com.alibaba.csp.sentinel.Constants;
 import com.alibaba.csp.sentinel.EntryType;
 import com.alibaba.csp.sentinel.SphO;
@@ -29,6 +25,10 @@ import com.alibaba.csp.sentinel.node.EntranceNode;
 import com.alibaba.csp.sentinel.node.Node;
 import com.alibaba.csp.sentinel.slotchain.StringResourceWrapper;
 import com.alibaba.csp.sentinel.slots.nodeselector.NodeSelectorSlot;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Utility class to get or create {@link Context} in current thread.
@@ -104,25 +104,32 @@ public class ContextUtil {
      * </p>
      *
      * @param name   the context name
+     *               调用链的入口，作用是为了区分不同的调用链路
      * @param origin the origin of this invocation, usually the origin could be the Service
      *               Consumer's app name. The origin is useful when we want to control different
      *               invoker/consumer separately.
+     *               两个作用，一是用于黑白名单的授权控制，二是可以用来统计诸如从应用 application-a 发起的对当前应用 interfaceXxx() 接口的调用
      * @return The invocation context of the current thread
      */
     public static Context enter(String name, String origin) {
         if (Constants.CONTEXT_DEFAULT_NAME.equals(name)) {
             throw new ContextNameDefineException(
-                "The " + Constants.CONTEXT_DEFAULT_NAME + " can't be permit to defined!");
+                    "The " + Constants.CONTEXT_DEFAULT_NAME + " can't be permit to defined!");
         }
         return trueEnter(name, origin);
     }
 
     protected static Context trueEnter(String name, String origin) {
+        // 先从ThreadLocal中获取
         Context context = contextHolder.get();
+
         if (context == null) {
+            // 如果 ThreadLocal 中获取不到 Context
+            // 则根据 name 从 map 中获取根节点，只要是相同的资源名，就能直接从 map 中获取到 node
             Map<String, DefaultNode> localCacheNameMap = contextNameNodeMap;
             DefaultNode node = localCacheNameMap.get(name);
             if (node == null) {
+                //当前最多缓存 2000 个上下文
                 if (localCacheNameMap.size() > Constants.MAX_CONTEXT_NAME_SIZE) {
                     setNullContext();
                     return NULL_CONTEXT;
@@ -135,6 +142,7 @@ public class ContextUtil {
                                 setNullContext();
                                 return NULL_CONTEXT;
                             } else {
+                                // 创建一个新的入口节点
                                 node = new EntranceNode(new StringResourceWrapper(name, EntryType.IN), null);
                                 // Add entrance node.
                                 Constants.ROOT.addChild(node);
@@ -150,8 +158,11 @@ public class ContextUtil {
                     }
                 }
             }
+
+            // 创建一个新的Context，并设置Context的根节点，即设置EntranceNode
             context = new Context(node, name);
             context.setOrigin(origin);
+            // 将该Context保存到ThreadLocal中去
             contextHolder.set(context);
         }
 
@@ -165,7 +176,7 @@ public class ContextUtil {
         // Don't need to be thread-safe.
         if (shouldWarn) {
             RecordLog.warn("[SentinelStatusChecker] WARN: Amount of context exceeds the threshold "
-                + Constants.MAX_CONTEXT_NAME_SIZE + ". Entries in new contexts will NOT take effect!");
+                    + Constants.MAX_CONTEXT_NAME_SIZE + ". Entries in new contexts will NOT take effect!");
             shouldWarn = false;
         }
     }

@@ -16,11 +16,7 @@
 package com.alibaba.csp.sentinel.slots;
 
 import com.alibaba.csp.sentinel.log.RecordLog;
-import com.alibaba.csp.sentinel.slotchain.AbstractLinkedProcessorSlot;
-import com.alibaba.csp.sentinel.slotchain.DefaultProcessorSlotChain;
-import com.alibaba.csp.sentinel.slotchain.ProcessorSlot;
-import com.alibaba.csp.sentinel.slotchain.ProcessorSlotChain;
-import com.alibaba.csp.sentinel.slotchain.SlotChainBuilder;
+import com.alibaba.csp.sentinel.slotchain.*;
 import com.alibaba.csp.sentinel.spi.Spi;
 import com.alibaba.csp.sentinel.spi.SpiLoader;
 
@@ -37,10 +33,24 @@ public class DefaultSlotChainBuilder implements SlotChainBuilder {
 
     @Override
     public ProcessorSlotChain build() {
+        // 处理器链表
         ProcessorSlotChain chain = new DefaultProcessorSlotChain();
 
+        // spi 加载 ProcessorSlot 的实现类
+        // 位置: META-INF/services/com.alibaba.csp.sentinel.slotchain.ProcessorSlot
+        // 实现类:
+        //      NodeSelectorSlot
+        //      ClusterBuilderSlot
+        //      LogSlot
+        //      StatisticSlot
+        //      AuthoritySlot
+        //      SystemSlot
+        //      FlowSlot
+        //      DegradeSlot
         List<ProcessorSlot> sortedSlotList = SpiLoader.of(ProcessorSlot.class).loadInstanceListSorted();
+
         for (ProcessorSlot slot : sortedSlotList) {
+            //非 AbstractLinkedProcessorSlot 类型的处理器跳过
             if (!(slot instanceof AbstractLinkedProcessorSlot)) {
                 RecordLog.warn("The ProcessorSlot(" + slot.getClass().getCanonicalName() + ") is not an instance of AbstractLinkedProcessorSlot, can't be added into ProcessorSlotChain");
                 continue;

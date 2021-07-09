@@ -35,9 +35,11 @@ import com.alibaba.csp.sentinel.util.function.Predicate;
  */
 public class ArrayMetric implements Metric {
 
+    // 使用数组保存数据的计量器类
     private final LeapArray<MetricBucket> data;
 
     public ArrayMetric(int sampleCount, int intervalInMs) {
+        //秒维度的实现
         this.data = new OccupiableBucketLeapArray(sampleCount, intervalInMs);
     }
 
@@ -45,6 +47,7 @@ public class ArrayMetric implements Metric {
         if (enableOccupy) {
             this.data = new OccupiableBucketLeapArray(sampleCount, intervalInMs);
         } else {
+            //分钟维度的实现
             this.data = new BucketLeapArray(sampleCount, intervalInMs);
         }
     }

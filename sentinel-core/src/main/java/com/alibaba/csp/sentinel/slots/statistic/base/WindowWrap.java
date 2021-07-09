@@ -21,21 +21,29 @@ package com.alibaba.csp.sentinel.slots.statistic.base;
  * @param <T> data type
  * @author jialiang.linjl
  * @author Eric Zhao
+ * <p>
+ * 时间窗口
  */
 public class WindowWrap<T> {
 
     /**
      * Time length of a single window bucket in milliseconds.
+     * <p>
+     * 时间窗口的长度，单位是毫秒
      */
     private final long windowLengthInMs;
 
     /**
      * Start timestamp of the window in milliseconds.
+     * <p>
+     * 时间窗口的开始时间，单位是毫秒
      */
     private long windowStart;
 
     /**
      * Statistic data.
+     *
+     * 时间窗口的内容
      */
     private T value;
 
@@ -91,9 +99,9 @@ public class WindowWrap<T> {
     @Override
     public String toString() {
         return "WindowWrap{" +
-            "windowLengthInMs=" + windowLengthInMs +
-            ", windowStart=" + windowStart +
-            ", value=" + value +
-            '}';
+                "windowLengthInMs=" + windowLengthInMs +
+                ", windowStart=" + windowStart +
+                ", value=" + value +
+                '}';
     }
 }
