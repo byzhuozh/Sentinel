@@ -101,6 +101,7 @@ public class ClusterNode extends StatisticNode {
      * @return the {@link Node} of the specific origin
      */
     public Node getOrCreateOriginNode(String origin) {
+        //origin:  ContextUtil#enter 方法中标识的 orign
         StatisticNode statisticNode = originCountMap.get(origin);
         if (statisticNode == null) {
             lock.lock();

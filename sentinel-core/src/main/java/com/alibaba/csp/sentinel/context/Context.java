@@ -77,6 +77,8 @@ public class Context {
 
     /**
      * The origin of this context (usually indicate different invokers, e.g. service consumer name or origin IP).
+     * <p>
+     * 调用方标识
      */
     private String origin = "";
 

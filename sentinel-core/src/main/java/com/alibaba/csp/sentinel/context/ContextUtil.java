@@ -142,9 +142,9 @@ public class ContextUtil {
                                 setNullContext();
                                 return NULL_CONTEXT;
                             } else {
-                                // 创建一个新的入口节点
+                                // 初始化EntranceNode节点, 创建一个新的入口节点
                                 node = new EntranceNode(new StringResourceWrapper(name, EntryType.IN), null);
-                                // Add entrance node.
+                                //添加EntranceNode节点，作为入口节点
                                 Constants.ROOT.addChild(node);
 
                                 Map<String, DefaultNode> newMap = new HashMap<>(contextNameNodeMap.size() + 1);
@@ -160,6 +160,7 @@ public class ContextUtil {
             }
 
             // 创建一个新的Context，并设置Context的根节点，即设置EntranceNode
+            // 多个Context公用一个，name为ContextName，EntranceNode节点的name也为ContextName，保持一致
             context = new Context(node, name);
             context.setOrigin(origin);
             // 将该Context保存到ThreadLocal中去

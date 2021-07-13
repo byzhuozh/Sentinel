@@ -15,23 +15,19 @@
  */
 package com.alibaba.csp.sentinel.slots.clusterbuilder;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.alibaba.csp.sentinel.Constants;
 import com.alibaba.csp.sentinel.EntryType;
 import com.alibaba.csp.sentinel.context.Context;
 import com.alibaba.csp.sentinel.context.ContextUtil;
-import com.alibaba.csp.sentinel.node.ClusterNode;
-import com.alibaba.csp.sentinel.node.DefaultNode;
-import com.alibaba.csp.sentinel.node.IntervalProperty;
-import com.alibaba.csp.sentinel.node.Node;
-import com.alibaba.csp.sentinel.node.SampleCountProperty;
+import com.alibaba.csp.sentinel.node.*;
 import com.alibaba.csp.sentinel.slotchain.AbstractLinkedProcessorSlot;
 import com.alibaba.csp.sentinel.slotchain.ProcessorSlotChain;
 import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slotchain.StringResourceWrapper;
 import com.alibaba.csp.sentinel.spi.Spi;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>
@@ -45,7 +41,7 @@ import com.alibaba.csp.sentinel.spi.Spi;
  * </p>
  *
  * @author jialiang.linjl
- *
+ * <p>
  * 用于存储资源的统计信息以及调用者信息，例如该资源的 RT, QPS, thread count 等等，这些信息将用作为多维度限流，降级的依据
  */
 @Spi(isSingleton = false, order = Constants.ORDER_CLUSTER_BUILDER_SLOT)
@@ -69,23 +65,26 @@ public class ClusterBuilderSlot extends AbstractLinkedProcessorSlot<DefaultNode>
      * at the very beginning while concurrent map will hold the lock all the time.
      * </p>
      */
+    //以 resource 为 key，每个 resource 都有一个 ClusterNode
     private static volatile Map<ResourceWrapper, ClusterNode> clusterNodeMap = new HashMap<>();
 
     private static final Object lock = new Object();
 
+    //相同的 resource 只有一个 ClusterNode 实例， 这样就可以统计一个接口的 qps
     private volatile ClusterNode clusterNode = null;
 
     @Override
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count,
                       boolean prioritized, Object... args)
-        throws Throwable {
+            throws Throwable {
+        // 判断clusterNode是否为null，一个Resource共享同一个Chain，这里，一个Resource共享同一个clusterNode
         if (clusterNode == null) {
             synchronized (lock) {
                 if (clusterNode == null) {
                     // Create the cluster node.
                     clusterNode = new ClusterNode(resourceWrapper.getName(), resourceWrapper.getResourceType());
 
-                    // 将 clusterNode 保存到全局的 map 中去
+                    // 创建一个新的CusterNode，保存到全局的 map 中去
                     HashMap<ResourceWrapper, ClusterNode> newMap = new HashMap<>(Math.max(clusterNodeMap.size(), 16));
                     newMap.putAll(clusterNodeMap);
                     newMap.put(node.getId(), clusterNode);
@@ -102,7 +101,9 @@ public class ClusterBuilderSlot extends AbstractLinkedProcessorSlot<DefaultNode>
          * if context origin is set, we should get or create a new {@link Node} of
          * the specific origin.
          */
+        // 如果orgin不为"", 则需要设置orginNode
         if (!"".equals(context.getOrigin())) {
+            //返回 StatisticNode， 每个 clusterNode 会关联一个 StatisticNode
             Node originNode = node.getClusterNode().getOrCreateOriginNode(context.getOrigin());
             context.getCurEntry().setOriginNode(originNode);
         }

@@ -202,6 +202,7 @@ public class CtSph implements Sph {
     ProcessorSlot<Object> lookProcessChain(ResourceWrapper resourceWrapper) {
         // 从缓存 map 中获取当前资源的 SlotChain
         // 缓存 map 的 key 为资源，value 为其相关的 SlotChain
+        // 即便 resourceWrapper 是不同对象，只要 resource name 相同，则 chain 也是相同的
         ProcessorSlotChain chain = chainMap.get(resourceWrapper);
 
         // 若缓存中没有相关的SlotChain，则创建一个并放入到缓存
@@ -214,10 +215,10 @@ public class CtSph implements Sph {
                         return null;
                     }
 
-                    // 创建新的chain
+                    // 初始化一个新的SlotChain
                     chain = SlotChainProvider.newSlotChain();
 
-                    // 防止迭代稳定性问题
+                    // 防止迭代稳定性问题, copy on write 思想
                     Map<ResourceWrapper, ProcessorSlotChain> newMap = new HashMap<ResourceWrapper, ProcessorSlotChain>(chainMap.size() + 1);
                     newMap.putAll(chainMap);
                     newMap.put(resourceWrapper, chain);

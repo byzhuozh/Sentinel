@@ -85,6 +85,8 @@ public abstract class ResourceWrapper {
 
     /**
      * Only {@link #getName()} is considered.
+     *
+     * 只要 name 相同，则认为是同一个 resource
      */
     @Override
     public boolean equals(Object obj) {

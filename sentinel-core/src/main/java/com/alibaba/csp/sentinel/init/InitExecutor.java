@@ -43,6 +43,7 @@ public final class InitExecutor {
             return;
         }
         try {
+            //CommandCenterInitFunc && HeartbeatSenderInitFunc
             List<InitFunc> initFuncs = SpiLoader.of(InitFunc.class).loadInstanceListSorted();
             List<OrderWrapper> initList = new ArrayList<OrderWrapper>();
             for (InitFunc initFunc : initFuncs) {

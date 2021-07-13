@@ -50,6 +50,7 @@ import com.alibaba.csp.sentinel.property.SentinelProperty;
  */
 public class FlowRuleManager {
 
+    //key: 资源名， val: 规则列表
     private static final AtomicReference<Map<String, List<FlowRule>>> flowRules = new AtomicReference<Map<String, List<FlowRule>>>();
 
     private static final FlowPropertyListener LISTENER = new FlowPropertyListener();
@@ -60,7 +61,9 @@ public class FlowRuleManager {
         new NamedThreadFactory("sentinel-metrics-record-task", true));
 
     static {
+        //初始化空集合
         flowRules.set(Collections.<String, List<FlowRule>>emptyMap());
+        //初始化监听器  FlowPropertyListener
         currentProperty.addListener(LISTENER);
         startMetricTimerListener();
     }

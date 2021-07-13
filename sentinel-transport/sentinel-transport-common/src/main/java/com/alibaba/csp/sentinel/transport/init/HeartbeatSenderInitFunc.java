@@ -49,6 +49,7 @@ public class HeartbeatSenderInitFunc implements InitFunc {
 
     @Override
     public void init() {
+        //基于 SPI 实现，加载 HeartbeatSender 的实现类
         HeartbeatSender sender = HeartbeatSenderProvider.getHeartbeatSender();
         if (sender == null) {
             RecordLog.warn("[HeartbeatSenderInitFunc] WARN: No HeartbeatSender loaded");
@@ -58,6 +59,7 @@ public class HeartbeatSenderInitFunc implements InitFunc {
         initSchedulerIfNeeded();
         long interval = retrieveInterval(sender);
         setIntervalIfNotExists(interval);
+        // 启动一个定时器，发送心跳信息
         scheduleHeartbeatTask(sender, interval);
     }
 

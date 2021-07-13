@@ -132,6 +132,7 @@ public class NodeSelectorSlot extends AbstractLinkedProcessorSlot<Object> {
     /**
      * {@link DefaultNode}s of the same resource in different context.
      */
+    // key 是 context name, value 是 DefaultNode 实例
     private volatile Map<String, DefaultNode> map = new HashMap<String, DefaultNode>(10);
 
     @Override
@@ -165,6 +166,7 @@ public class NodeSelectorSlot extends AbstractLinkedProcessorSlot<Object> {
                 if (node == null) {
                     // 如果当前「上下文」中没有该节点，则创建一个DefaultNode节点
                     node = new DefaultNode(resourceWrapper, null);
+                    // 保存Node  一个resource对应一个Node
                     HashMap<String, DefaultNode> cacheMap = new HashMap<String, DefaultNode>(map.size());
                     cacheMap.putAll(map);
                     cacheMap.put(context.getName(), node);
