@@ -119,6 +119,12 @@ public class ContextUtil {
         return trueEnter(name, origin);
     }
 
+    /**
+     *
+     * @param name   上下文环境 Context 的名称
+     * @param origin   origin 不为空的话，会创建一个 StatisticNode, 用作某个 origin 的统计信息
+     * @return
+     */
     protected static Context trueEnter(String name, String origin) {
         // 先从ThreadLocal中获取
         Context context = contextHolder.get();
@@ -144,7 +150,8 @@ public class ContextUtil {
                             } else {
                                 // 初始化EntranceNode节点, 创建一个新的入口节点
                                 node = new EntranceNode(new StringResourceWrapper(name, EntryType.IN), null);
-                                //添加EntranceNode节点，作为入口节点
+
+                                // 将创建的 EntranceNode 加入到根节点的子节点中
                                 Constants.ROOT.addChild(node);
 
                                 Map<String, DefaultNode> newMap = new HashMap<>(contextNameNodeMap.size() + 1);
@@ -159,10 +166,11 @@ public class ContextUtil {
                 }
             }
 
-            // 创建一个新的Context，并设置Context的根节点，即设置EntranceNode
-            // 多个Context公用一个，name为ContextName，EntranceNode节点的name也为ContextName，保持一致
+            // 每个线程请求进来都会创建一个新的 Context，并设置 Context 的入口节点，即设置 EntranceNode
+            // EntranceNode 节点的 name 也为 ContextName，保持一致
             context = new Context(node, name);
             context.setOrigin(origin);
+
             // 将该Context保存到ThreadLocal中去
             contextHolder.set(context);
         }

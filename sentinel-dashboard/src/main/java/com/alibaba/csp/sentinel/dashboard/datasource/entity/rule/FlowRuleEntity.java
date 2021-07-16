@@ -43,6 +43,7 @@ public class FlowRuleEntity implements RuleEntity {
     private String refResource;
     /**
      * 0. default, 1. warm up, 2. rate limiter
+     * 控制器行为
      */
     private Integer controlBehavior;
     private Integer warmUpPeriodSec;

@@ -43,6 +43,9 @@ public class CtSph implements Sph {
      * Same resource({@link ResourceWrapper#equals(Object)}) will share the same
      * {@link ProcessorSlotChain}, no matter in which {@link Context}.
      */
+    // 资源的处理链
+    // 同一个资源 ResourceWrapper (同一个资源名称) 会共同使用同一个 ProcessorSlotChain ，
+    // 即不同的线程在访问同一个资源保护的代码时，这些线程将共同使用 ProcessorSlotChain  中的各个 ProcessorSlot
     private static volatile Map<ResourceWrapper, ProcessorSlotChain> chainMap = new HashMap<ResourceWrapper, ProcessorSlotChain>();
 
     private static final Object LOCK = new Object();
@@ -108,6 +111,14 @@ public class CtSph implements Sph {
         return asyncEntryWithPriorityInternal(resourceWrapper, count, false, args);
     }
 
+    /**
+     * @param resourceWrapper 资源的包装类型，可以是字符串类型的资源描述，也可以是方法类的
+     * @param count           此次需要消耗的令牌
+     * @param prioritized     是否注重优先级
+     * @param args
+     * @return
+     * @throws BlockException
+     */
     private Entry entryWithPriority(ResourceWrapper resourceWrapper, int count, boolean prioritized, Object... args)
             throws BlockException {
         // 从 ThreadLocal 中获取 Context 实例
@@ -143,7 +154,7 @@ public class CtSph implements Sph {
          * so no rule checking will be done.
          */
         // 根据 lookProcessChain 方法，可知，当 resource 超过 Constants.MAX_SLOT_CHAIN_SIZE，
-        // 也就是 6000 的时候，Sentinel 开始不处理新的请求，这么做主要是为了 Sentinel 的性能考虑
+        // 也就是 6000 的时候，Sentinel 开始不处理新的请求，直接熔断，这么做主要是为了 Sentinel 的性能考虑
         if (chain == null) {
             return new CtEntry(resourceWrapper, null, context);
         }
@@ -210,6 +221,7 @@ public class CtSph implements Sph {
             synchronized (LOCK) {
                 chain = chainMap.get(resourceWrapper);
                 if (chain == null) {
+
                     // 缓存 map 的 size >= chain数量最大阈值(6000)，则直接返回null，不再创建新的chain
                     if (chainMap.size() >= Constants.MAX_SLOT_CHAIN_SIZE) {
                         return null;
@@ -272,6 +284,7 @@ public class CtSph implements Sph {
 
     @Override
     public Entry entry(String name) throws BlockException {
+        // 资源包装类
         StringResourceWrapper resource = new StringResourceWrapper(name, EntryType.OUT);
         return entry(resource, 1, OBJECTS0);
     }

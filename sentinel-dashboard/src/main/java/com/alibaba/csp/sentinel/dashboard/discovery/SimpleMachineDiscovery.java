@@ -32,6 +32,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class SimpleMachineDiscovery implements MachineDiscovery {
 
+    // 缓存客户端上报的连接信息
+    // key：app, val: 客户端的 app 信息
     private final ConcurrentMap<String, AppInfo> apps = new ConcurrentHashMap<>();
 
     @Override

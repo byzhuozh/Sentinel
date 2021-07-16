@@ -15,6 +15,15 @@
  */
 package com.alibaba.csp.sentinel.transport.command;
 
+import com.alibaba.csp.sentinel.command.CommandHandler;
+import com.alibaba.csp.sentinel.command.CommandHandlerProvider;
+import com.alibaba.csp.sentinel.concurrent.NamedThreadFactory;
+import com.alibaba.csp.sentinel.transport.CommandCenter;
+import com.alibaba.csp.sentinel.transport.command.http.HttpEventTask;
+import com.alibaba.csp.sentinel.transport.config.TransportConfig;
+import com.alibaba.csp.sentinel.transport.log.CommandCenterLog;
+import com.alibaba.csp.sentinel.util.StringUtil;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -22,23 +31,7 @@ import java.net.SocketException;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import com.alibaba.csp.sentinel.command.CommandHandler;
-import com.alibaba.csp.sentinel.command.CommandHandlerProvider;
-import com.alibaba.csp.sentinel.concurrent.NamedThreadFactory;
-import com.alibaba.csp.sentinel.transport.log.CommandCenterLog;
-import com.alibaba.csp.sentinel.transport.CommandCenter;
-import com.alibaba.csp.sentinel.transport.command.http.HttpEventTask;
-import com.alibaba.csp.sentinel.transport.config.TransportConfig;
-import com.alibaba.csp.sentinel.util.StringUtil;
+import java.util.concurrent.*;
 
 /***
  * The simple command center provides service to exchange information.
@@ -53,11 +46,12 @@ public class SimpleHttpCommandCenter implements CommandCenter {
     private static final int DEFAULT_PORT = 8719;
 
     @SuppressWarnings("rawtypes")
+    //key: 命令名字，val: 命名处理器
     private static final Map<String, CommandHandler> handlerMap = new ConcurrentHashMap<String, CommandHandler>();
 
     @SuppressWarnings("PMD.ThreadPoolCreationRule")
     private ExecutorService executor = Executors.newSingleThreadExecutor(
-        new NamedThreadFactory("sentinel-command-center-executor"));
+            new NamedThreadFactory("sentinel-command-center-executor"));
     private ExecutorService bizExecutor;
 
     private ServerSocket socketReference;
@@ -66,27 +60,31 @@ public class SimpleHttpCommandCenter implements CommandCenter {
     @SuppressWarnings("rawtypes")
     public void beforeStart() throws Exception {
         // Register handlers
+        // 加载命令处理器
         Map<String, CommandHandler> handlers = CommandHandlerProvider.getInstance().namedHandlers();
+
+        //注册处理器
         registerCommands(handlers);
     }
 
     @Override
     public void start() throws Exception {
         int nThreads = Runtime.getRuntime().availableProcessors();
+
+        // 初始化线程池
         this.bizExecutor = new ThreadPoolExecutor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS,
-            new ArrayBlockingQueue<Runnable>(10),
-            new NamedThreadFactory("sentinel-command-center-service-executor"),
-            new RejectedExecutionHandler() {
-                @Override
-                public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-                    CommandCenterLog.info("EventTask rejected");
-                    throw new RejectedExecutionException();
-                }
-            });
+                new ArrayBlockingQueue<Runnable>(10),
+                new NamedThreadFactory("sentinel-command-center-service-executor"),
+                new RejectedExecutionHandler() {
+                    @Override
+                    public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+                        CommandCenterLog.info("EventTask rejected");
+                        throw new RejectedExecutionException();
+                    }
+                });
 
         Runnable serverInitTask = new Runnable() {
             int port;
-
             {
                 try {
                     port = Integer.parseInt(TransportConfig.getPort());
@@ -103,6 +101,7 @@ public class SimpleHttpCommandCenter implements CommandCenter {
                 if (serverSocket != null) {
                     CommandCenterLog.info("[CommandCenter] Begin listening at port " + serverSocket.getLocalPort());
                     socketReference = serverSocket;
+                    // 异步监听 sentinel dashboard 连接
                     executor.submit(new ServerThread(serverSocket));
                     success = true;
                     port = serverSocket.getLocalPort();
@@ -185,6 +184,7 @@ public class SimpleHttpCommandCenter implements CommandCenter {
             while (true) {
                 Socket socket = null;
                 try {
+                    //监听连接
                     socket = this.serverSocket.accept();
                     setSocketSoTimeout(socket);
                     HttpEventTask eventTask = new HttpEventTask(socket);

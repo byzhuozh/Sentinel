@@ -15,14 +15,12 @@
  */
 package com.alibaba.csp.sentinel.slots.block.flow;
 
-import java.util.Collection;
-
 import com.alibaba.csp.sentinel.cluster.ClusterStateManager;
-import com.alibaba.csp.sentinel.cluster.server.EmbeddedClusterTokenServerProvider;
-import com.alibaba.csp.sentinel.cluster.client.TokenClientProvider;
-import com.alibaba.csp.sentinel.cluster.TokenResultStatus;
 import com.alibaba.csp.sentinel.cluster.TokenResult;
+import com.alibaba.csp.sentinel.cluster.TokenResultStatus;
 import com.alibaba.csp.sentinel.cluster.TokenService;
+import com.alibaba.csp.sentinel.cluster.client.TokenClientProvider;
+import com.alibaba.csp.sentinel.cluster.server.EmbeddedClusterTokenServerProvider;
 import com.alibaba.csp.sentinel.context.Context;
 import com.alibaba.csp.sentinel.log.RecordLog;
 import com.alibaba.csp.sentinel.node.DefaultNode;
@@ -33,6 +31,8 @@ import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.slots.clusterbuilder.ClusterBuilderSlot;
 import com.alibaba.csp.sentinel.util.StringUtil;
 import com.alibaba.csp.sentinel.util.function.Function;
+
+import java.util.Collection;
 
 /**
  * Rule checker for flow control rules.
@@ -46,6 +46,8 @@ public class FlowRuleChecker {
         if (ruleProvider == null || resource == null) {
             return;
         }
+
+        //获取资源对应的流控规则
         Collection<FlowRule> rules = ruleProvider.apply(resource.getName());
         if (rules != null) {
             for (FlowRule rule : rules) {
@@ -57,17 +59,18 @@ public class FlowRuleChecker {
     }
 
     public boolean canPassCheck(/*@NonNull*/ FlowRule rule, Context context, DefaultNode node,
-                                                    int acquireCount) {
+                                             int acquireCount) {
         return canPassCheck(rule, context, node, acquireCount, false);
     }
 
     public boolean canPassCheck(/*@NonNull*/ FlowRule rule, Context context, DefaultNode node, int acquireCount,
-                                                    boolean prioritized) {
+                                             boolean prioritized) {
         String limitApp = rule.getLimitApp();
         if (limitApp == null) {
             return true;
         }
 
+        //是否是集群流控
         if (rule.isClusterMode()) {
             return passClusterCheck(rule, context, node, acquireCount, prioritized);
         }
@@ -82,6 +85,11 @@ public class FlowRuleChecker {
             return true;
         }
 
+        // 获取流控规则控制器，
+        //     DefaultController
+        //     RateLimiterController   速率控制器
+        //     WarmUpController        预热控制器
+        //     WarmUpRateLimiterController   预热 + 速率
         return rule.getRater().canPass(selectedNode, acquireCount, prioritized);
     }
 
@@ -133,7 +141,7 @@ public class FlowRuleChecker {
 
             return selectReferenceNode(rule, context, node);
         } else if (RuleConstant.LIMIT_APP_OTHER.equals(limitApp)
-            && FlowRuleManager.isOtherOrigin(origin, rule.getResource())) {
+                && FlowRuleManager.isOtherOrigin(origin, rule.getResource())) {
             if (strategy == RuleConstant.STRATEGY_DIRECT) {
                 return context.getOriginNode();
             }
@@ -147,13 +155,22 @@ public class FlowRuleChecker {
     private static boolean passClusterCheck(FlowRule rule, Context context, DefaultNode node, int acquireCount,
                                             boolean prioritized) {
         try {
+            //如果当前的角色是 client, 则 clusterService 为 DefaultClusterTokenClient
+            //如果当前的角色是 server, 则 clusterService 为 DefaultEmbeddedTokenServer
             TokenService clusterService = pickClusterService();
+
+            // 如果无法获取到集群限流Token服务，如果该限流规则配置了可以退化为单机限流模式，则退化为单机限流
             if (clusterService == null) {
                 return fallbackToLocalOrPass(rule, context, node, acquireCount, prioritized);
             }
+
+            // 获取集群限流的流程ID，该 flowId 全局唯一
             long flowId = rule.getClusterConfig().getFlowId();
+
+            // 通过 TokenService 去申请 token
             TokenResult result = clusterService.requestToken(flowId, acquireCount, prioritized);
             return applyTokenResult(result, rule, context, node, acquireCount, prioritized);
+
             // If client is absent, then fallback to local mode.
         } catch (Throwable ex) {
             RecordLog.warn("[FlowRuleChecker] Request cluster token unexpected failed", ex);

@@ -70,7 +70,7 @@ public class ClusterBuilderSlot extends AbstractLinkedProcessorSlot<DefaultNode>
 
     private static final Object lock = new Object();
 
-    //相同的 resource 只有一个 ClusterNode 实例， 这样就可以统计一个接口的 qps
+    //相同的资源 resource 只有一个 ClusterNode 实例， 这样就可以统计一个接口的 qps
     private volatile ClusterNode clusterNode = null;
 
     @Override
@@ -94,14 +94,14 @@ public class ClusterBuilderSlot extends AbstractLinkedProcessorSlot<DefaultNode>
             }
         }
 
-        // 将clusterNode塞到DefaultNode中去
+        // 将 clusterNode 塞到 DefaultNode 中去
         node.setClusterNode(clusterNode);
 
         /*
          * if context origin is set, we should get or create a new {@link Node} of
          * the specific origin.
          */
-        // 如果orgin不为"", 则需要设置orginNode
+        // 如果 orgin 不为 "", 则需要设置 orginNode
         if (!"".equals(context.getOrigin())) {
             //返回 StatisticNode， 每个 clusterNode 会关联一个 StatisticNode
             Node originNode = node.getClusterNode().getOrCreateOriginNode(context.getOrigin());

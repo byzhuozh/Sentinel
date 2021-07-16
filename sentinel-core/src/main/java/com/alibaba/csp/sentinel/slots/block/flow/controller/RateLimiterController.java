@@ -15,21 +15,26 @@
  */
 package com.alibaba.csp.sentinel.slots.block.flow.controller;
 
-import java.util.concurrent.atomic.AtomicLong;
-
-import com.alibaba.csp.sentinel.slots.block.flow.TrafficShapingController;
-
-import com.alibaba.csp.sentinel.util.TimeUtil;
 import com.alibaba.csp.sentinel.node.Node;
+import com.alibaba.csp.sentinel.slots.block.flow.TrafficShapingController;
+import com.alibaba.csp.sentinel.util.TimeUtil;
+
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author jialiang.linjl
+ * <p>
+ * 流控-排队等待
  */
 public class RateLimiterController implements TrafficShapingController {
 
+    // 排队最大时长，默认 500ms
     private final int maxQueueingTimeMs;
+
+    // QPS 设置的值
     private final double count;
 
+    // 上一次请求通过的时间
     private final AtomicLong latestPassedTime = new AtomicLong(-1);
 
     public RateLimiterController(int timeOut, double count) {
@@ -42,6 +47,9 @@ public class RateLimiterController implements TrafficShapingController {
         return canPass(node, acquireCount, false);
     }
 
+    /**
+     * 通常 acquireCount 为 1，不用关心参数 prioritized
+     */
     @Override
     public boolean canPass(Node node, int acquireCount, boolean prioritized) {
         // Pass when acquire count is less or equal than 0.
@@ -56,9 +64,11 @@ public class RateLimiterController implements TrafficShapingController {
 
         long currentTime = TimeUtil.currentTimeMillis();
         // Calculate the interval between every two requests.
+        // 计算每 2 个请求之间的间隔，比如 QPS 限制为 10，那么间隔就是 100ms
         long costTime = Math.round(1.0 * (acquireCount) / count * 1000);
 
         // Expected pass time of this request.
+        // 下个请求的预期通过时间
         long expectedTime = costTime + latestPassedTime.get();
 
         if (expectedTime <= currentTime) {
@@ -67,18 +77,24 @@ public class RateLimiterController implements TrafficShapingController {
             return true;
         } else {
             // Calculate the time to wait.
+            // 计算需要等待的时间
             long waitTime = costTime + latestPassedTime.get() - TimeUtil.currentTimeMillis();
+            // 如果等待时长超过了最大值，则返回 false
             if (waitTime > maxQueueingTimeMs) {
                 return false;
             } else {
+                // 更新 latestPassedTime， 将 latestPassedTime 往前推
                 long oldTime = latestPassedTime.addAndGet(costTime);
                 try {
+                    //重新计算需要等待的时间
                     waitTime = oldTime - TimeUtil.currentTimeMillis();
+                    //如果等待时长超过了最大值，则把时间上一次通过的时间回拨
                     if (waitTime > maxQueueingTimeMs) {
                         latestPassedTime.addAndGet(-costTime);
                         return false;
                     }
                     // in race condition waitTime may <= 0
+                    // 进行 sleep 睡眠等待
                     if (waitTime > 0) {
                         Thread.sleep(waitTime);
                     }

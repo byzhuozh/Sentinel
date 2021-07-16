@@ -15,13 +15,12 @@
  */
 package com.alibaba.csp.sentinel.init;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ServiceLoader;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import com.alibaba.csp.sentinel.log.RecordLog;
 import com.alibaba.csp.sentinel.spi.SpiLoader;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Load registered init functions and execute in order.
@@ -35,7 +34,7 @@ public final class InitExecutor {
     /**
      * If one {@link InitFunc} throws an exception, the init process
      * will immediately be interrupted and the application will exit.
-     *
+     * <p>
      * The initialization will be executed only once.
      */
     public static void doInit() {
@@ -43,17 +42,20 @@ public final class InitExecutor {
             return;
         }
         try {
-            //CommandCenterInitFunc && HeartbeatSenderInitFunc
+            // 基于SPI 加载： CommandCenterInitFunc 、 HeartbeatSenderInitFunc
             List<InitFunc> initFuncs = SpiLoader.of(InitFunc.class).loadInstanceListSorted();
             List<OrderWrapper> initList = new ArrayList<OrderWrapper>();
             for (InitFunc initFunc : initFuncs) {
                 RecordLog.info("[InitExecutor] Found init func: {}", initFunc.getClass().getCanonicalName());
+                // 顺续编排
                 insertSorted(initList, initFunc);
             }
+
             for (OrderWrapper w : initList) {
+                // 初始化
                 w.func.init();
                 RecordLog.info("[InitExecutor] Executing {} with order {}",
-                    w.func.getClass().getCanonicalName(), w.order);
+                        w.func.getClass().getCanonicalName(), w.order);
             }
         } catch (Exception ex) {
             RecordLog.warn("[InitExecutor] WARN: Initialization failed", ex);
@@ -83,7 +85,8 @@ public final class InitExecutor {
         }
     }
 
-    private InitExecutor() {}
+    private InitExecutor() {
+    }
 
     private static class OrderWrapper {
         private final int order;

@@ -58,20 +58,22 @@ public class Context {
 
     /**
      * Context name.
+     * <p>
+     * 上下文环境的名称
      */
     private final String name;
 
     /**
      * The entrance node of current invocation tree.
      * <p>
-     * 当前调用链的根节点
+     * 调用链的入口节点信息
      */
     private DefaultNode entranceNode;
 
     /**
      * Current processing entry.
      * <p>
-     * 当前的入口
+     * 调用链中当前节点的信息
      */
     private Entry curEntry;
 

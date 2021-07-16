@@ -84,6 +84,7 @@ public class FlowRule extends AbstractRule {
      */
     private int controlBehavior = RuleConstant.CONTROL_BEHAVIOR_DEFAULT;
 
+    // 预热时间
     private int warmUpPeriodSec = 10;
 
     /**
@@ -91,6 +92,7 @@ public class FlowRule extends AbstractRule {
      */
     private int maxQueueingTimeMs = 500;
 
+    //是否是集群流控
     private boolean clusterMode;
     /**
      * Flow rule config for cluster mode.

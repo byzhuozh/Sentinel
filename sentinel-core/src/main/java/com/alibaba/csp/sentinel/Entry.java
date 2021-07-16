@@ -58,6 +58,7 @@ public abstract class Entry implements AutoCloseable {
     private final long createTimestamp;
     private long completeTimestamp;
 
+    //当前节点
     private Node curNode;
     /**
      * {@link Node} of the specific origin, Usually the origin is the Service Consumer.

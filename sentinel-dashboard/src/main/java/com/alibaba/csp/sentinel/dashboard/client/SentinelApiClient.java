@@ -276,7 +276,9 @@ public class SentinelApiClient {
      * @param params
      * @return
      */
-    private CompletableFuture<String> executeCommand(String app, String ip, int port, String api, Map<String, String> params, boolean useHttpPost) {
+    private CompletableFuture<String> executeCommand(String app, String ip, int port,
+                                                     String api, Map<String, String> params,
+                                                     boolean useHttpPost) {
         CompletableFuture<String> future = new CompletableFuture<>();
         if (StringUtil.isBlank(ip) || StringUtil.isBlank(api)) {
             future.completeExceptionally(new IllegalArgumentException("Bad URL or command name"));
@@ -296,8 +298,11 @@ public class SentinelApiClient {
                 } else {
                     urlBuilder.append('&');
                 }
+
+                //构建组装参数
                 urlBuilder.append(queryString(params));
             }
+
             return executeCommand(new HttpGet(urlBuilder.toString()));
         } else {
             // Using POST
@@ -413,7 +418,11 @@ public class SentinelApiClient {
         }
     }
 
-    private CompletableFuture<Void> setRulesAsync(String app, String ip, int port, String type, List<? extends RuleEntity> entities) {
+    private CompletableFuture<Void> setRulesAsync(String app,
+                                                  String ip,
+                                                  int port,
+                                                  String type,
+                                                  List<? extends RuleEntity> entities) {
         try {
             AssertUtil.notNull(entities, "rules cannot be null");
             AssertUtil.notEmpty(app, "Bad app name");
@@ -424,6 +433,7 @@ public class SentinelApiClient {
             Map<String, String> params = new HashMap<>(2);
             params.put("type", type);
             params.put("data", data);
+            //设置 api 为 setRules
             return executeCommand(app, ip, port, SET_RULES_PATH, params, true)
                 .thenCompose(r -> {
                     if ("success".equalsIgnoreCase(r.trim())) {

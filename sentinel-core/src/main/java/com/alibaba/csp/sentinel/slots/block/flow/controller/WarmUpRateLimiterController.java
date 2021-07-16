@@ -23,6 +23,8 @@ import com.alibaba.csp.sentinel.util.TimeUtil;
 /**
  * @author jialiang.linjl
  * @since 1.4.0
+ *
+ * 在 RateLimiterController 基础上，加入了预热的内容。
  */
 public class WarmUpRateLimiterController extends WarmUpController {
 

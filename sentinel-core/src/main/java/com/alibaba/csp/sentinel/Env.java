@@ -33,6 +33,7 @@ public class Env {
 
     static {
         // If init fails, the process will exit.
+        // 初始化客户端的相关处理器 (InitFunc 实现类：心跳、命令接收等)
         InitExecutor.doInit();
     }
 

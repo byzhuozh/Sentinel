@@ -166,14 +166,16 @@ public class NodeSelectorSlot extends AbstractLinkedProcessorSlot<Object> {
                 if (node == null) {
                     // 如果当前「上下文」中没有该节点，则创建一个DefaultNode节点
                     node = new DefaultNode(resourceWrapper, null);
+
                     // 保存Node  一个resource对应一个Node
                     HashMap<String, DefaultNode> cacheMap = new HashMap<String, DefaultNode>(map.size());
                     cacheMap.putAll(map);
                     cacheMap.put(context.getName(), node);
                     map = cacheMap;
+
                     // Build invocation tree
-                    // 将当前node作为「上下文」的最后一个节点的子节点添加进去
-                    // 如果context的 curEntry.parent.curNode 为 null，则添加到 entranceNode 中去
+                    // 将当前 node作为「上下文」的最后一个节点的子节点添加进去
+                    // 如果 context的 curEntry.parent.curNode 为 null，则添加到 entranceNode 中去
                     // 否则添加到 context的curEntry.parent.curNode 中去
                     ((DefaultNode) context.getLastNode()).addChild(node);
                 }

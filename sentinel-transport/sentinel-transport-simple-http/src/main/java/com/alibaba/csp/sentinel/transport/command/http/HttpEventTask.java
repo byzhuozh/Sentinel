@@ -19,21 +19,13 @@ import com.alibaba.csp.sentinel.command.CommandHandler;
 import com.alibaba.csp.sentinel.command.CommandRequest;
 import com.alibaba.csp.sentinel.command.CommandResponse;
 import com.alibaba.csp.sentinel.config.SentinelConfig;
-import com.alibaba.csp.sentinel.transport.log.CommandCenterLog;
 import com.alibaba.csp.sentinel.transport.command.SimpleHttpCommandCenter;
 import com.alibaba.csp.sentinel.transport.command.exception.RequestException;
+import com.alibaba.csp.sentinel.transport.log.CommandCenterLog;
 import com.alibaba.csp.sentinel.transport.util.HttpCommandUtils;
 import com.alibaba.csp.sentinel.util.StringUtil;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.Socket;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
@@ -78,11 +70,12 @@ public class HttpEventTask implements Runnable {
             OutputStream outputStream = socket.getOutputStream();
 
             printWriter = new PrintWriter(
-                new OutputStreamWriter(outputStream, Charset.forName(SentinelConfig.charset())));
+                    new OutputStreamWriter(outputStream, Charset.forName(SentinelConfig.charset())));
 
             String firstLine = readLine(inputStream);
             CommandCenterLog.info("[SimpleHttpCommandCenter] Socket income: " + firstLine
-                + ", addr: " + socket.getInetAddress());
+                    + ", addr: " + socket.getInetAddress());
+            //解析请求
             CommandRequest request = processQueryString(firstLine);
 
             if (firstLine.length() > 4 && StringUtil.equalsIgnoreCase("POST", firstLine.substring(0, 4))) {
@@ -91,6 +84,7 @@ public class HttpEventTask implements Runnable {
             }
 
             // Validate the target command.
+            // 获取 api 的名字
             String commandName = HttpCommandUtils.getTarget(request);
             if (StringUtil.isBlank(commandName)) {
                 writeResponse(printWriter, StatusCode.BAD_REQUEST, INVALID_COMMAND_MESSAGE);
@@ -98,6 +92,7 @@ public class HttpEventTask implements Runnable {
             }
 
             // Find the matching command handler.
+            // 根据 api 名字，找到对应的处理器
             CommandHandler<?> commandHandler = SimpleHttpCommandCenter.getHandler(commandName);
             if (commandHandler != null) {
                 CommandResponse<?> response = commandHandler.handle(request);
@@ -109,7 +104,7 @@ public class HttpEventTask implements Runnable {
 
             long cost = System.currentTimeMillis() - start;
             CommandCenterLog.info("[SimpleHttpCommandCenter] Deal a socket task: " + firstLine
-                + ", address: " + socket.getInetAddress() + ", time cost: " + cost + " ms");
+                    + ", address: " + socket.getInetAddress() + ", time cost: " + cost + " ms");
         } catch (RequestException e) {
             writeResponse(printWriter, e.getStatusCode(), e.getMessage());
         } catch (Throwable e) {
@@ -164,7 +159,7 @@ public class HttpEventTask implements Runnable {
      * @throws IOException
      */
     protected static void processPostRequest(InputStream in, CommandRequest request)
-        throws RequestException, IOException {
+            throws RequestException, IOException {
         Map<String, String> headerMap = parsePostHeaders(in);
 
         if (headerMap == null) {
@@ -177,7 +172,7 @@ public class HttpEventTask implements Runnable {
             // not supported Content-type
             CommandCenterLog.warn("Request not supported: unsupported Content-Type: " + headerMap.get("content-type"));
             throw new RequestException(StatusCode.UNSUPPORTED_MEDIA_TYPE,
-                "Only form-encoded post request is supported");
+                    "Only form-encoded post request is supported");
         }
 
         int bodyLength = 0;
@@ -243,7 +238,7 @@ public class HttpEventTask implements Runnable {
     }
 
     private static String readBody(InputStream in, int bodyLength)
-        throws IOException, RequestException {
+            throws IOException, RequestException {
         byte[] buf = new byte[bodyLength];
         int pos = 0;
         while (pos < bodyLength) {
@@ -322,8 +317,8 @@ public class HttpEventTask implements Runnable {
 
     private void writeResponse(PrintWriter out, StatusCode statusCode, String message) {
         out.print("HTTP/1.0 " + statusCode.toString() + "\r\n"
-            + "Content-Length: " + (message == null ? 0 : message.getBytes().length) + "\r\n"
-            + "Connection: close\r\n\r\n");
+                + "Content-Length: " + (message == null ? 0 : message.getBytes().length) + "\r\n"
+                + "Connection: close\r\n\r\n");
         if (message != null) {
             out.print(message);
         }
@@ -346,6 +341,8 @@ public class HttpEventTask implements Runnable {
         int ask = line.indexOf('?') == -1 ? line.lastIndexOf(' ') : line.indexOf('?');
         int space = line.lastIndexOf(' ');
         String target = line.substring(start != -1 ? start + 1 : 0, ask != -1 ? ask : line.length());
+
+        //解析出 请求的 path 的名字
         request.addMetadata(HttpCommandUtils.REQUEST_TARGET, target);
         if (ask == -1 || ask == space) {
             return request;

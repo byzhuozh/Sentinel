@@ -68,7 +68,7 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
             // 首先增加访问资源的并发线程数
             // Request passed, add thread count and pass count.
             node.increaseThreadNum();
-            // 在增加当前秒钟pass的请求数
+            // 在增加当前秒钟pass的请求数 (count：令牌)
             node.addPassRequest(count);
 
             // 如果在调用 entry 之前指定了调用的 origin，即调用方
@@ -83,6 +83,7 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
             // 全局的统计
             if (resourceWrapper.getEntryType() == EntryType.IN) {
                 // Add count for global inbound entry node for global statistics.
+                // 统计全局资源并发数 和 请求数 (count：令牌)
                 Constants.ENTRY_NODE.increaseThreadNum();
                 Constants.ENTRY_NODE.addPassRequest(count);
             }

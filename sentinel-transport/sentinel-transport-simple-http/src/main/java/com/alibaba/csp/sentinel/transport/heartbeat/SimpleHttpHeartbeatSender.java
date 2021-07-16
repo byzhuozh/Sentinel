@@ -48,6 +48,8 @@ public class SimpleHttpHeartbeatSender implements HeartbeatSender {
 
     public SimpleHttpHeartbeatSender() {
         // Retrieve the list of default addresses.
+        // 获取 ashboard Server 管理台的地址
+        // 启动时指定：eg:  -Dcsp.sentinel.dashboard.server=127.0.0.1:8080
         List<Endpoint> newAddrs = TransportConfig.getConsoleServerList();
         if (newAddrs.isEmpty()) {
             RecordLog.warn("[SimpleHttpHeartbeatSender] Dashboard server address not configured or not available");
@@ -63,11 +65,14 @@ public class SimpleHttpHeartbeatSender implements HeartbeatSender {
             RecordLog.info("[SimpleHttpHeartbeatSender] Command server port not initialized, won't send heartbeat");
             return false;
         }
+
+        // 获取 dashboard Server 地址列表
         Endpoint addrInfo = getAvailableAddress();
         if (addrInfo == null) {
             return false;
         }
 
+        //发送心跳
         SimpleHttpRequest request = new SimpleHttpRequest(addrInfo, TransportConfig.getHeartbeatApiPath());
         request.setParams(heartBeat.generateCurrentMessage());
         try {

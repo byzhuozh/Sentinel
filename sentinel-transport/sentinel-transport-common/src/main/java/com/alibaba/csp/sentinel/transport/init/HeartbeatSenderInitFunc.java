@@ -15,11 +15,6 @@
  */
 package com.alibaba.csp.sentinel.transport.init;
 
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor.DiscardOldestPolicy;
-import java.util.concurrent.TimeUnit;
-
 import com.alibaba.csp.sentinel.concurrent.NamedThreadFactory;
 import com.alibaba.csp.sentinel.config.SentinelConfig;
 import com.alibaba.csp.sentinel.heartbeat.HeartbeatSenderProvider;
@@ -28,6 +23,11 @@ import com.alibaba.csp.sentinel.init.InitOrder;
 import com.alibaba.csp.sentinel.log.RecordLog;
 import com.alibaba.csp.sentinel.transport.HeartbeatSender;
 import com.alibaba.csp.sentinel.transport.config.TransportConfig;
+
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor.DiscardOldestPolicy;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Global init function for heartbeat sender.
@@ -42,23 +42,27 @@ public class HeartbeatSenderInitFunc implements InitFunc {
     private void initSchedulerIfNeeded() {
         if (pool == null) {
             pool = new ScheduledThreadPoolExecutor(2,
-                new NamedThreadFactory("sentinel-heartbeat-send-task", true),
-                new DiscardOldestPolicy());
+                    new NamedThreadFactory("sentinel-heartbeat-send-task", true),
+                    new DiscardOldestPolicy());
         }
     }
 
     @Override
     public void init() {
-        //基于 SPI 实现，加载 HeartbeatSender 的实现类
+        // 基于 SPI 实现，加载 HeartbeatSender 的实现类
         HeartbeatSender sender = HeartbeatSenderProvider.getHeartbeatSender();
         if (sender == null) {
             RecordLog.warn("[HeartbeatSenderInitFunc] WARN: No HeartbeatSender loaded");
             return;
         }
 
+        // 初始化 schedule 线程池
         initSchedulerIfNeeded();
+
+        // 获取心跳间隔
         long interval = retrieveInterval(sender);
         setIntervalIfNotExists(interval);
+
         // 启动一个定时器，发送心跳信息
         scheduleHeartbeatTask(sender, interval);
     }
@@ -73,14 +77,16 @@ public class HeartbeatSenderInitFunc implements InitFunc {
 
     long retrieveInterval(/*@NonNull*/ HeartbeatSender sender) {
         Long intervalInConfig = TransportConfig.getHeartbeatIntervalMs();
+        // 如果全局参数未配置心跳时间，则根据 HeartbeatSender 实现类各自指定
         if (isValidHeartbeatInterval(intervalInConfig)) {
             RecordLog.info("[HeartbeatSenderInitFunc] Using heartbeat interval "
-                + "in Sentinel config property: " + intervalInConfig);
+                    + "in Sentinel config property: " + intervalInConfig);
             return intervalInConfig;
         } else {
+            // 根据不同心跳检测器，获取心跳检测时间
             long senderInterval = sender.intervalMs();
             RecordLog.info("[HeartbeatSenderInit] Heartbeat interval not configured in "
-                + "config property or invalid, using sender default: " + senderInterval);
+                    + "config property or invalid, using sender default: " + senderInterval);
             return senderInterval;
         }
     }
@@ -97,6 +103,6 @@ public class HeartbeatSenderInitFunc implements InitFunc {
             }
         }, 5000, interval, TimeUnit.MILLISECONDS);
         RecordLog.info("[HeartbeatSenderInit] HeartbeatSender started: "
-            + sender.getClass().getCanonicalName());
+                + sender.getClass().getCanonicalName());
     }
 }

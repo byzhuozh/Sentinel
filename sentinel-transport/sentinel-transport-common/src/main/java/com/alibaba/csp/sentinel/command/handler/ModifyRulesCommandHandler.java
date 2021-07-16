@@ -42,6 +42,8 @@ import static com.alibaba.csp.sentinel.transport.util.WritableDataSourceRegistry
 /**
  * @author jialiang.linjl
  * @author Eric Zhao
+ *
+ * 规则处理器
  */
 @CommandMapping(name = "setRules", desc = "modify the rules, accept param: type={ruleType}&data={ruleJson}")
 public class ModifyRulesCommandHandler implements CommandHandler<String> {
@@ -72,9 +74,12 @@ public class ModifyRulesCommandHandler implements CommandHandler<String> {
 
         String result = "success";
 
+        //类型是：flow
         if (FLOW_RULE_TYPE.equalsIgnoreCase(type)) {
             List<FlowRule> flowRules = JSONArray.parseArray(data, FlowRule.class);
+            //每次都是更新全部规则
             FlowRuleManager.loadRules(flowRules);
+            //写入本地数据源
             if (!writeToDataSource(getFlowDataSource(), flowRules)) {
                 result = WRITE_DS_FAILURE_MSG;
             }

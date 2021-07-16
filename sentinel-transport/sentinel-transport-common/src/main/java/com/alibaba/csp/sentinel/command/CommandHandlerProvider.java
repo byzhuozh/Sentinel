@@ -39,6 +39,7 @@ public class CommandHandlerProvider implements Iterable<CommandHandler> {
         Map<String, CommandHandler> map = new HashMap<String, CommandHandler>();
         List<CommandHandler> handlers = spiLoader.loadInstanceList();
         for (CommandHandler handler : handlers) {
+            //筛选获取带有 @CommandMapping 注解的 命令处理器
             String name = parseCommandName(handler);
             if (!StringUtil.isEmpty(name)) {
                 map.put(name, handler);

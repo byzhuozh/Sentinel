@@ -134,6 +134,11 @@ public class FlowControllerV2 {
         return null;
     }
 
+    /**
+     * 添加流控规则
+     * @param entity
+     * @return
+     */
     @PostMapping("/rule")
     @AuthAction(value = AuthService.PrivilegeType.WRITE_RULE)
     public Result<FlowRuleEntity> apiAddFlowRule(@RequestBody FlowRuleEntity entity) {
@@ -142,6 +147,7 @@ public class FlowControllerV2 {
         if (checkResult != null) {
             return checkResult;
         }
+
         entity.setId(null);
         Date date = new Date();
         entity.setGmtCreate(date);
