@@ -37,6 +37,8 @@ import com.alibaba.csp.sentinel.slots.nodeselector.NodeSelectorSlot;
  * @see NodeSelectorSlot
  * <p>
  * 该节点表示一棵调用链树的入口节点，通过它可以获取调用链树中所有的子节点
+ *
+ * 入口节点，一个Context会有一个入口节点，用于统计当前Conte 据
  */
 public class EntranceNode extends DefaultNode {
 

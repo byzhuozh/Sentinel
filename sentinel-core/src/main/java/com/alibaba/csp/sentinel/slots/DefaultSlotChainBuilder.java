@@ -47,6 +47,7 @@ public class DefaultSlotChainBuilder implements SlotChainBuilder {
         //      SystemSlot
         //      FlowSlot
         //      DegradeSlot
+        //      ParamFlowSlot （热点参数规则，拓展包实现）
         List<ProcessorSlot> sortedSlotList = SpiLoader.of(ProcessorSlot.class).loadInstanceListSorted();
 
         for (ProcessorSlot slot : sortedSlotList) {

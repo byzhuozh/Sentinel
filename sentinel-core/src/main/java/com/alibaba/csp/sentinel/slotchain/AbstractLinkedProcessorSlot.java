@@ -23,6 +23,7 @@ import com.alibaba.csp.sentinel.context.Context;
  */
 public abstract class AbstractLinkedProcessorSlot<T> implements ProcessorSlot<T> {
 
+    //指向下一个 slot
     private AbstractLinkedProcessorSlot<?> next = null;
 
     @Override
@@ -37,6 +38,7 @@ public abstract class AbstractLinkedProcessorSlot<T> implements ProcessorSlot<T>
     void transformEntry(Context context, ResourceWrapper resourceWrapper, Object o, int count, boolean prioritized, Object... args)
         throws Throwable {
         T t = (T)o;
+        // 进入下一个节点
         entry(context, resourceWrapper, t, count, prioritized, args);
     }
 

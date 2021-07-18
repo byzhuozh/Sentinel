@@ -20,6 +20,8 @@ import com.alibaba.csp.sentinel.context.Context;
 /**
  * @author qinan.qn
  * @author jialiang.linjl
+ *
+ * 单向链表
  */
 public class DefaultProcessorSlotChain extends ProcessorSlotChain {
 

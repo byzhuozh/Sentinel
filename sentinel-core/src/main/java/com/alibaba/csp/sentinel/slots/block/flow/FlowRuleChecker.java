@@ -47,10 +47,11 @@ public class FlowRuleChecker {
             return;
         }
 
-        //获取资源对应的流控规则
+        // 获取资源对应的流控规则
         Collection<FlowRule> rules = ruleProvider.apply(resource.getName());
         if (rules != null) {
             for (FlowRule rule : rules) {
+                // 流控规则校验
                 if (!canPassCheck(rule, context, node, count, prioritized)) {
                     throw new FlowException(rule.getLimitApp(), rule);
                 }
@@ -65,7 +66,10 @@ public class FlowRuleChecker {
 
     public boolean canPassCheck(/*@NonNull*/ FlowRule rule, Context context, DefaultNode node, int acquireCount,
                                              boolean prioritized) {
+        // 从规则中获取要限定的来源
         String limitApp = rule.getLimitApp();
+
+        // 若限流的来源为 NULL, 则请求直接通过
         if (limitApp == null) {
             return true;
         }
@@ -80,7 +84,10 @@ public class FlowRuleChecker {
 
     private static boolean passLocalCheck(FlowRule rule, Context context, DefaultNode node, int acquireCount,
                                           boolean prioritized) {
+        // 通过规则形成选择出的规则 Node
         Node selectedNode = selectNodeByRequesterAndStrategy(rule, context, node);
+
+        // 若没有 node, 则说明没有规则，则直接返回
         if (selectedNode == null) {
             return true;
         }

@@ -23,6 +23,7 @@ import com.alibaba.csp.sentinel.node.IntervalProperty;
  */
 public final class RuleConstant {
 
+    // 流控模式（线程数、qps）
     public static final int FLOW_GRADE_THREAD = 0;
     public static final int FLOW_GRADE_QPS = 1;
 
@@ -42,14 +43,15 @@ public final class RuleConstant {
     public static final int AUTHORITY_WHITE = 0;
     public static final int AUTHORITY_BLACK = 1;
 
-    public static final int STRATEGY_DIRECT = 0;
-    public static final int STRATEGY_RELATE = 1;
-    public static final int STRATEGY_CHAIN = 2;
+    // 流控策略
+    public static final int STRATEGY_DIRECT = 0;  // 直接
+    public static final int STRATEGY_RELATE = 1;  // 关联
+    public static final int STRATEGY_CHAIN = 2;   // 链路
 
     // 默认流控-控制器（快速失败、预热、速率(排队等待)、预热+速率(排队等待)）
-    public static final int CONTROL_BEHAVIOR_DEFAULT = 0;
-    public static final int CONTROL_BEHAVIOR_WARM_UP = 1;
-    public static final int CONTROL_BEHAVIOR_RATE_LIMITER = 2;
+    public static final int CONTROL_BEHAVIOR_DEFAULT = 0;   //
+    public static final int CONTROL_BEHAVIOR_WARM_UP = 1;   // 令牌桶算法
+    public static final int CONTROL_BEHAVIOR_RATE_LIMITER = 2;  // 漏斗算法
     public static final int CONTROL_BEHAVIOR_WARM_UP_RATE_LIMITER = 3;
 
     public static final int DEFAULT_BLOCK_STRATEGY = 0;

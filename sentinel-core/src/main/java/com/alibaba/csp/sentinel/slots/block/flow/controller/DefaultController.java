@@ -45,10 +45,23 @@ public class DefaultController implements TrafficShapingController {
         return canPass(node, acquireCount, false);
     }
 
+    /**
+     * 快速失败的流控效果
+     *
+     * @param node resource node
+     * @param acquireCount count to acquire
+     * @param prioritized whether the request is prioritized
+     * @return
+     */
     @Override
     public boolean canPass(Node node, int acquireCount, boolean prioritized) {
+        // 获取当前时间窗中已经统计的数据
         int curCount = avgUsedTokens(node);
+
+        // 已经统计的数据 + 本次请求的数量 > 阈值， 则返回 false， 表示不通过
         if (curCount + acquireCount > count) {
+
+            // 如果有设置优先级，且流控模式为 QPS, 则进一步判断
             if (prioritized && grade == RuleConstant.FLOW_GRADE_QPS) {
                 long currentTime;
                 long waitInMs;
@@ -69,9 +82,14 @@ public class DefaultController implements TrafficShapingController {
     }
 
     private int avgUsedTokens(Node node) {
+        // 若没有 node, 则说明没有做统计工作，直接返回 0
         if (node == null) {
             return DEFAULT_AVG_USED_TOKENS;
         }
+
+
+        // 阈值类型为线程数，则返回当前的线程数，
+        // 阈值类型为QPS，则返回当前 node 统计的 qps
         return grade == RuleConstant.FLOW_GRADE_THREAD ? node.curThreadNum() : (int)(node.passQps());
     }
 

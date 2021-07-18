@@ -67,12 +67,14 @@ public class FlowRule extends AbstractRule {
      * {@link RuleConstant#STRATEGY_RELATE} for relevant flow control (with relevant resource);
      * {@link RuleConstant#STRATEGY_CHAIN} for chain flow control (by entrance resource).
      * <p>
-     * 基于调用关系的流量控制
+     * 流控模式：直接、关联、链路
      */
     private int strategy = RuleConstant.STRATEGY_DIRECT;
 
     /**
      * Reference resource in flow control with relevant resource or context.
+     *
+     * strategy = STRATEGY_RELATE  关联流控的时，需要制定关联的资源
      */
     private String refResource;
 
@@ -80,7 +82,8 @@ public class FlowRule extends AbstractRule {
      * Rate limiter control behavior.
      * 0. default(reject directly), 1. warm up, 2. rate limiter, 3. warm up + rate limiter
      * <p>
-     * 流控策略
+     * 流控效果
+     * 快速失败、预热、速率(排队等待)、预热+速率(排队等待)）
      */
     private int controlBehavior = RuleConstant.CONTROL_BEHAVIOR_DEFAULT;
 
@@ -89,13 +92,18 @@ public class FlowRule extends AbstractRule {
 
     /**
      * Max queueing time in rate limiter behavior.
+     *
+     * controlBehavior = CONTROL_BEHAVIOR_DEFAULT
+     * 排队等待超时时间
      */
     private int maxQueueingTimeMs = 500;
 
     //是否是集群流控
     private boolean clusterMode;
+
     /**
      * Flow rule config for cluster mode.
+     * clusterMode = true , 集群的配置
      */
     private ClusterFlowConfig clusterConfig;
 

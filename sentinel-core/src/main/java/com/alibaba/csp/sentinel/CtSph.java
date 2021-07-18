@@ -126,7 +126,7 @@ public class CtSph implements Sph {
         Context context = ContextUtil.getContext();
 
         // 如果是 NullContext，那么说明 context name 超过了 2000 个，参见 ContextUtil#trueEnter
-        // 这个时候，Sentinel 不再接受处理新的 context 配置，也就是不做这些新的接口的统计、限流熔断等
+        // 即访问的请求数量超过了阈值，此时 Sentinel 不再接受处理新的 context 配置，也就是不做这些新的接口的统计、限流熔断等(不做规则检测)
         if (context instanceof NullContext) {
             // The {@link NullContext} indicates that the amount of context has exceeded the threshold,
             // so here init the entry only. No rule checking will be done.
@@ -163,6 +163,7 @@ public class CtSph implements Sph {
         // 把这个异常往上层业务层抛，业务层处理 BlockException 应该进入到熔断降级逻辑中
         Entry e = new CtEntry(resourceWrapper, chain, context);
         try {
+            // 对资源进行操作
             chain.entry(context, resourceWrapper, null, count, prioritized, args);
         } catch (BlockException e1) {
             e.exit(count, args);
@@ -377,8 +378,8 @@ public class CtSph implements Sph {
         StringResourceWrapper resource = new StringResourceWrapper(name, entryType, resourceType);
 
         // 返回一个资源操作对象entry
-        // prioritized若为true，则表示当前访问必须等待“根据其优先级计算出的时间”后才可通过
-        // prioritized若为false，则当前请求无需等待
+        // prioritized 若为 true，则表示当前访问必须等待“根据其优先级计算出的时间”后才可通过
+        // prioritized 若为 false，则当前请求无需等待
         return entryWithPriority(resource, count, prioritized, args);
     }
 

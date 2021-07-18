@@ -61,7 +61,8 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count,
                       boolean prioritized, Object... args) throws Throwable {
         try {
-            // 触发下一个Slot的entry方法
+            // 会调用后续所有的的 slot, 完成所有的规则校验
+            // 执行过程中可能跑出异常，eg: BlockException
             fireEntry(context, resourceWrapper, node, count, prioritized, args);
 
             // 如果到达这里说明获取token成功，可以继续操作

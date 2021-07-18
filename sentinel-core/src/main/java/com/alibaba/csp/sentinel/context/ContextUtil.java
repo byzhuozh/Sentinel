@@ -51,6 +51,7 @@ public class ContextUtil {
 
     /**
      * Holds all {@link EntranceNode}. Each {@link EntranceNode} is associated with a distinct context name.
+     * key: context_name, val: EntranceNode
      */
     private static volatile Map<String, DefaultNode> contextNameNodeMap = new HashMap<>();
 
@@ -132,10 +133,12 @@ public class ContextUtil {
         if (context == null) {
             // 如果 ThreadLocal 中获取不到 Context
             // 则根据 name 从 map 中获取根节点，只要是相同的资源名，就能直接从 map 中获取到 node
+            // key: context_name, val: EntranceNode
             Map<String, DefaultNode> localCacheNameMap = contextNameNodeMap;
+            // 获取 EntranceNode
             DefaultNode node = localCacheNameMap.get(name);
             if (node == null) {
-                //当前最多缓存 2000 个上下文
+                //当前最多缓存 Context 2000 个上下文，如果超过，则直接返回 NullContext
                 if (localCacheNameMap.size() > Constants.MAX_CONTEXT_NAME_SIZE) {
                     setNullContext();
                     return NULL_CONTEXT;
@@ -154,6 +157,7 @@ public class ContextUtil {
                                 // 将创建的 EntranceNode 加入到根节点的子节点中
                                 Constants.ROOT.addChild(node);
 
+                                // 防止迭代稳定性问题，(共享集合稳定性问题)
                                 Map<String, DefaultNode> newMap = new HashMap<>(contextNameNodeMap.size() + 1);
                                 newMap.putAll(contextNameNodeMap);
                                 newMap.put(name, node);
@@ -169,6 +173,8 @@ public class ContextUtil {
             // 每个线程请求进来都会创建一个新的 Context，并设置 Context 的入口节点，即设置 EntranceNode
             // EntranceNode 节点的 name 也为 ContextName，保持一致
             context = new Context(node, name);
+
+            // 初始化 context 的来源
             context.setOrigin(origin);
 
             // 将该Context保存到ThreadLocal中去
